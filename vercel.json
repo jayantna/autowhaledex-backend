@@ -4,13 +4,6 @@
     "api/*.js": {
       "runtime": "nodejs18.x"
     }
-  },
-  "env": {
-    "PGUSER": "@pguser",
-    "PGHOST": "@pghost", 
-    "PGDATABASE": "@pgdatabase",
-    "PGPASSWORD": "@pgpassword",
-    "PGPORT": "@pgport"
   }
 }
 
