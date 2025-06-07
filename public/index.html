@@ -5,426 +5,259 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vault Tracker</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
             padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
         h1 {
-            text-align: center;
             color: #333;
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .status {
             text-align: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 10px;
-            font-weight: bold;
         }
-
-        .status.online {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.offline {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .form-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border: 1px solid #e9ecef;
-        }
-
-        .form-section h2 {
-            color: #495057;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-
         label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #495057;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-
         input[type="text"] {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        button {
+            background-color: #007bff;
             color: white;
+            padding: 10px 20px;
             border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
             margin-right: 10px;
-            margin-bottom: 10px;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        button:hover {
+            background-color: #0056b3;
         }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn.secondary {
-            background: linear-gradient(135deg, #6c757d, #495057);
-        }
-
-        .btn.danger {
-            background: linear-gradient(135deg, #dc3545, #c82333);
-        }
-
-        .data-section {
-            margin-top: 30px;
-        }
-
-        .data-section h3 {
-            color: #495057;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .data-display {
-            background: #ffffff;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .vault-item {
-            background: #f8f9fa;
+        .results {
+            margin-top: 20px;
             padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
         }
-
-        .vault-item:last-child {
-            margin-bottom: 0;
+        .vault-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: white;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
         }
-
-        .vault-address {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #495057;
-            word-break: break-all;
-        }
-
-        .vault-date {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-
-        .loading {
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-        }
-
         .error {
             color: #dc3545;
-            background: #f8d7da;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
             padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
+            border-radius: 4px;
+            margin-top: 10px;
         }
-
         .success {
             color: #155724;
-            background: #d4edda;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
             padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
+            border-radius: 4px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏦 Vault Tracker</h1>
+        <h1>Vault Tracker</h1>
         
-        <div id="status" class="status">Checking connection...</div>
-
-        <div class="form-section">
-            <h2>➕ Add New Vault</h2>
+        <!-- Add Vault Section -->
+        <div class="section">
+            <h2>Add Vault</h2>
             <div class="form-group">
-                <label for="ownerAddress">Owner Address:</label>
-                <input type="text" id="ownerAddress" placeholder="0x..." />
+                <label for="owner_address">Owner Address:</label>
+                <input type="text" id="owner_address" placeholder="0x123...">
             </div>
             <div class="form-group">
-                <label for="vaultAddress">Vault Address:</label>
-                <input type="text" id="vaultAddress" placeholder="0x..." />
+                <label for="vault_address">Vault Address:</label>
+                <input type="text" id="vault_address" placeholder="0xabc...">
             </div>
-            <button class="btn" onclick="addVault()">Add Vault</button>
-            <div id="addResult"></div>
+            <button onclick="addVault()">Add Vault</button>
         </div>
 
-        <div class="grid">
-            <div class="form-section">
-                <h2>🔍 Search by Owner</h2>
-                <div class="form-group">
-                    <label for="searchAddress">Owner Address:</label>
-                    <input type="text" id="searchAddress" placeholder="0x..." />
-                </div>
-                <button class="btn secondary" onclick="searchByOwner()">Search Vaults</button>
-                <div id="ownerResults" class="data-section" style="display: none;">
-                    <h3>Vaults for Owner</h3>
-                    <div id="ownerData" class="data-display"></div>
-                </div>
+        <!-- Search Section -->
+        <div class="section" style="margin-top: 30px;">
+            <h2>Search Vaults</h2>
+            <div class="form-group">
+                <label for="search_address">Owner Address:</label>
+                <input type="text" id="search_address" placeholder="0x123...">
             </div>
-
-            <div class="form-section">
-                <h2>📊 All Data</h2>
-                <button class="btn secondary" onclick="loadAllData()">Load All Vaults</button>
-                <button class="btn danger" onclick="clearData()">Clear Display</button>
-                <div id="allResults" class="data-section" style="display: none;">
-                    <h3>All Vaults</h3>
-                    <div id="allData" class="data-display"></div>
-                </div>
-            </div>
+            <button onclick="searchVaults()">Search Vaults</button>
+            <button onclick="getAllData()">Get All Data</button>
         </div>
+
+        <!-- Results Section -->
+        <div id="results"></div>
     </div>
 
     <script>
-        const API_BASE = '/api';
+        const API_BASE = window.location.origin;
 
-        // Check server status
-        async function checkStatus() {
-            try {
-                const response = await fetch(`${API_BASE}/health`);
-                const data = await response.json();
-                const statusEl = document.getElementById('status');
-                
-                if (response.ok && data.status === 'OK') {
-                    statusEl.textContent = '✅ Server Online';
-                    statusEl.className = 'status online';
-                } else {
-                    statusEl.textContent = '❌ Server Error';
-                    statusEl.className = 'status offline';
-                }
-            } catch (error) {
-                document.getElementById('status').textContent = '❌ Server Offline';
-                document.getElementById('status').className = 'status offline';
-            }
-        }
-
-        // Add vault
         async function addVault() {
-            const ownerAddress = document.getElementById('ownerAddress').value.trim();
-            const vaultAddress = document.getElementById('vaultAddress').value.trim();
-            const resultEl = document.getElementById('addResult');
-
-            if (!ownerAddress || !vaultAddress) {
-                resultEl.innerHTML = '<div class="error">Please fill in both addresses</div>';
+            const owner_address = document.getElementById('owner_address').value;
+            const vault_address = document.getElementById('vault_address').value;
+            
+            if (!owner_address || !vault_address) {
+                showError('Please fill in both addresses');
                 return;
             }
 
             try {
-                const response = await fetch(`${API_BASE}/add`, {
+                const response = await fetch(`${API_BASE}/api/add`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        owner_address: ownerAddress,
-                        vault_address: vaultAddress
-                    })
+                    body: JSON.stringify({ owner_address, vault_address })
                 });
 
                 const data = await response.json();
                 
                 if (data.success) {
-                    resultEl.innerHTML = '<div class="success">✅ Vault added successfully!</div>';
-                    document.getElementById('ownerAddress').value = '';
-                    document.getElementById('vaultAddress').value = '';
+                    showSuccess('Vault added successfully!');
+                    document.getElementById('owner_address').value = '';
+                    document.getElementById('vault_address').value = '';
                 } else {
-                    resultEl.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                    showError(data.error);
                 }
             } catch (error) {
-                resultEl.innerHTML = '<div class="error">❌ Network error occurred</div>';
+                showError('Error adding vault: ' + error.message);
             }
         }
 
-        // Search by owner
-        async function searchByOwner() {
-            const address = document.getElementById('searchAddress').value.trim();
-            const resultsEl = document.getElementById('ownerResults');
-            const dataEl = document.getElementById('ownerData');
-
+        async function searchVaults() {
+            const address = document.getElementById('search_address').value;
+            
             if (!address) {
-                dataEl.innerHTML = '<div class="error">Please enter an owner address</div>';
-                resultsEl.style.display = 'block';
+                showError('Please enter an owner address');
                 return;
             }
 
-            dataEl.innerHTML = '<div class="loading">🔄 Searching...</div>';
-            resultsEl.style.display = 'block';
-
             try {
-                const response = await fetch(`${API_BASE}/owner?address=${encodeURIComponent(address)}`);
+                const response = await fetch(`${API_BASE}/api/owner?address=${encodeURIComponent(address)}`);
                 const data = await response.json();
                 
                 if (data.success) {
-                    if (data.vaults.length === 0) {
-                        dataEl.innerHTML = '<div>No vaults found for this owner</div>';
-                    } else {
-                        const vaultsHtml = data.vaults.map(vault => `
-                            <div class="vault-item">
-                                <div class="vault-address">${vault.vault_address}</div>
-                                <div class="vault-date">Created: ${new Date(vault.created_at).toLocaleString()}</div>
-                            </div>
-                        `).join('');
-                        dataEl.innerHTML = `
-                            <div style="margin-bottom: 15px;">
-                                <strong>Owner:</strong> <span class="vault-address">${data.owner}</span>
-                            </div>
-                            ${vaultsHtml}
-                        `;
-                    }
+                    displayVaults(data.vaults, `Vaults for ${data.owner}`);
                 } else {
-                    dataEl.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                    showError(data.error);
                 }
             } catch (error) {
-                dataEl.innerHTML = '<div class="error">❌ Network error occurred</div>';
+                showError('Error searching vaults: ' + error.message);
             }
         }
 
-        // Load all data
-        async function loadAllData() {
-            const resultsEl = document.getElementById('allResults');
-            const dataEl = document.getElementById('allData');
-
-            dataEl.innerHTML = '<div class="loading">🔄 Loading...</div>';
-            resultsEl.style.display = 'block';
-
+        async function getAllData() {
             try {
-                const response = await fetch(`${API_BASE}/data`);
+                const response = await fetch(`${API_BASE}/api/data`);
                 const data = await response.json();
                 
                 if (data.success) {
-                    if (data.data.length === 0) {
-                        dataEl.innerHTML = '<div>No vault data found</div>';
-                    } else {
-                        const vaultsHtml = data.data.map(item => `
-                            <div class="vault-item">
-                                <div><strong>Owner:</strong> <span class="vault-address">${item.owner_address}</span></div>
-                                <div><strong>Vault:</strong> <span class="vault-address">${item.vault_address}</span></div>
-                                <div class="vault-date">Created: ${new Date(item.created_at).toLocaleString()}</div>
-                            </div>
-                        `).join('');
-                        dataEl.innerHTML = vaultsHtml;
-                    }
+                    displayAllData(data.data);
                 } else {
-                    dataEl.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                    showError(data.error);
                 }
             } catch (error) {
-                dataEl.innerHTML = '<div class="error">❌ Network error occurred</div>';
+                showError('Error fetching data: ' + error.message);
             }
         }
 
-        // Clear data display
-        function clearData() {
-            document.getElementById('allResults').style.display = 'none';
-            document.getElementById('ownerResults').style.display = 'none';
-            document.getElementById('addResult').innerHTML = '';
+        function displayVaults(vaults, title) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (vaults.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="results">
+                        <h3>${title}</h3>
+                        <p>No vaults found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="results">
+                    <h3>${title}</h3>
+            `;
+            
+            vaults.forEach(vault => {
+                html += `
+                    <div class="vault-item">
+                        <strong>Vault:</strong> ${vault.vault_address}<br>
+                        <strong>Created:</strong> ${new Date(vault.created_at).toLocaleString()}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            resultsDiv.innerHTML = html;
         }
 
-        // Enter key handlers
-        document.getElementById('ownerAddress').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') addVault();
-        });
+        function displayAllData(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (data.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="results">
+                        <h3>All Data</h3>
+                        <p>No data found.</p>
+                    </div>
+                `;
+                return;
+            }
 
-        document.getElementById('vaultAddress').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') addVault();
-        });
+            let html = `
+                <div class="results">
+                    <h3>All Data (${data.length} records)</h3>
+            `;
+            
+            data.forEach(item => {
+                html += `
+                    <div class="vault-item">
+                        <strong>Owner:</strong> ${item.owner_address}<br>
+                        <strong>Vault:</strong> ${item.vault_address}<br>
+                        <strong>Created:</strong> ${new Date(item.created_at).toLocaleString()}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
 
-        document.getElementById('searchAddress').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') searchByOwner();
-        });
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="error">${message}</div>`;
+        }
 
-        // Initialize
-        checkStatus();
-        setInterval(checkStatus, 30000); // Check every 30 seconds
+        function showSuccess(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="success">${message}</div>`;
+        }
     </script>
 </body>
 </html>

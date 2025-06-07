@@ -2,22 +2,58 @@ import express from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // PostgreSQL connection
 let pool;
 
+// Create database if it doesn't exist
+const createDatabase = async () => {
+  const adminPool = new Pool({
+    user: process.env.PGUSER || 'postgres',
+    host: process.env.PGHOST || 'localhost',
+    database: 'postgres', // Connect to default postgres database
+    password: process.env.PGPASSWORD || 'password',
+    port: process.env.PGPORT || 5432,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+
+  try {
+    // Check if vault_db exists
+    const result = await adminPool.query(
+      "SELECT 1 FROM pg_database WHERE datname = 'vault_db'"
+    );
+    
+    if (result.rows.length === 0) {
+      // Create database if it doesn't exist
+      await adminPool.query('CREATE DATABASE vault_db');
+      console.log('Database vault_db created successfully');
+    } else {
+      console.log('Database vault_db already exists');
+    }
+  } catch (err) {
+    console.error('Error creating database:', err.message);
+  } finally {
+    await adminPool.end();
+  }
+};
+
 // Initialize database connection
 const initConnection = async () => {
-  if (pool) return pool;
-  
   pool = new Pool({
     user: process.env.PGUSER || 'postgres',
     host: process.env.PGHOST || 'localhost',
@@ -27,12 +63,19 @@ const initConnection = async () => {
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
   });
   
-  // Test connection and initialize tables
+  // Test connection
   try {
     await pool.query('SELECT NOW()');
     console.log('Connected to database successfully');
-    
-    // Initialize database tables
+  } catch (err) {
+    console.error('Database connection error:', err.message);
+    throw err;
+  }
+};
+
+// Initialize database tables
+const initDB = async () => {
+  try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS owner_vaults (
         id SERIAL PRIMARY KEY,
@@ -44,53 +87,43 @@ const initConnection = async () => {
     `);
     console.log('Database table initialized');
   } catch (err) {
-    console.error('Database connection/init error:', err.message);
+    console.error('Database init error:', err);
     throw err;
-  }
-  
-  return pool;
-};
-
-// Middleware to ensure database connection
-const ensureConnection = async (req, res, next) => {
-  try {
-    if (!pool) {
-      await initConnection();
-    }
-    next();
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Database connection failed' });
   }
 };
 
 // Routes
 
+// Serve frontend
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK' });
 });
 
 // Get all data
-app.get('/api/data', ensureConnection, async (req, res) => {
+app.get('/api/data', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM owner_vaults ORDER BY created_at DESC');
     res.json({ success: true, data: result.rows });
   } catch (err) {
-    console.error('Error fetching data:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // Get vaults by owner
-app.get('/api/owner', ensureConnection, async (req, res) => {
+app.get('/api/owner', async (req, res) => {
   try {
     const { address } = req.query;
     if (!address) {
-      return res.status(400).json({ success: false, error: 'Address parameter required' });
+      return res.status(400).json({ success: false, error: 'Address required' });
     }
     
     const result = await pool.query(
-      'SELECT vault_address, created_at FROM owner_vaults WHERE owner_address = $1 ORDER BY created_at DESC',
+      'SELECT vault_address, created_at FROM owner_vaults WHERE owner_address = $1',
       [address]
     );
     
@@ -100,20 +133,19 @@ app.get('/api/owner', ensureConnection, async (req, res) => {
       vaults: result.rows 
     });
   } catch (err) {
-    console.error('Error fetching owner vaults:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // Add vault to owner
-app.post('/api/add', ensureConnection, async (req, res) => {
+app.post('/api/add', async (req, res) => {
   try {
     const { owner_address, vault_address } = req.body;
     
     if (!owner_address || !vault_address) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Both owner_address and vault_address are required' 
+        error: 'owner_address and vault_address required' 
       });
     }
 
@@ -124,18 +156,44 @@ app.post('/api/add', ensureConnection, async (req, res) => {
 
     res.json({ 
       success: true, 
-      message: 'Vault added successfully',
-      data: { owner_address, vault_address }
+      message: 'Vault added successfully' 
     });
   } catch (err) {
-    console.error('Error adding vault:', err);
     if (err.code === '23505') {
-      res.status(409).json({ success: false, error: 'Vault already exists for this owner' });
+      res.status(409).json({ success: false, error: 'Vault already exists' });
     } else {
       res.status(500).json({ success: false, error: err.message });
     }
   }
 });
 
-// Export for Vercel
+// Start server
+const start = async () => {
+  try {
+    console.log('Starting server...');
+    
+    // Skip database creation in production (use existing database)
+    if (process.env.NODE_ENV !== 'production') {
+      await createDatabase();
+    }
+    
+    await initConnection();
+    await initDB();
+    
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      console.log('Endpoints:');
+      console.log('  GET /health');
+      console.log('  GET /api/data');
+      console.log('  GET /api/owner?address=ADDRESS');
+      console.log('  POST /api/add');
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  }
+};
+
+start();
+
 export default app;
