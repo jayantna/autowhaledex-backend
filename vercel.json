@@ -1,19 +1,16 @@
+
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.js"
-    }
-  ]
+  },
+  "env": {
+    "PGUSER": "@pguser",
+    "PGHOST": "@pghost", 
+    "PGDATABASE": "@pgdatabase",
+    "PGPASSWORD": "@pgpassword",
+    "PGPORT": "@pgport"
+  }
 }
+

@@ -2,35 +2,28 @@ import express from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
 config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // PostgreSQL connection
 let pool;
-
+let userdb= process.env.PGUSER
 // Create database if it doesn't exist
 const createDatabase = async () => {
   const adminPool = new Pool({
     user: process.env.PGUSER || 'postgres',
     host: process.env.PGHOST || 'localhost',
-    database: 'postgres', // Connect to default postgres database
+    database: process.env.PGDATABASE || 'postgres', // Connect to default postgres database
     password: process.env.PGPASSWORD || 'password',
     port: process.env.PGPORT || 5432,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl:true
   });
+  
 
   try {
     // Check if vault_db exists
@@ -57,16 +50,16 @@ const initConnection = async () => {
   pool = new Pool({
     user: process.env.PGUSER || 'postgres',
     host: process.env.PGHOST || 'localhost',
-    database: process.env.PGDATABASE || 'vault_db',
+    database: process.env.PGDATABASE || 'postgres', // Connect to default postgres database
     password: process.env.PGPASSWORD || 'password',
     port: process.env.PGPORT || 5432,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl:true
   });
   
   // Test connection
   try {
     await pool.query('SELECT NOW()');
-    console.log('Connected to database successfully');
+    console.log('Connected to vault_db successfully');
   } catch (err) {
     console.error('Database connection error:', err.message);
     throw err;
@@ -94,18 +87,13 @@ const initDB = async () => {
 
 // Routes
 
-// Serve frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });
 
 // Get all data
-app.get('/api/data', async (req, res) => {
+app.get('/data', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM owner_vaults ORDER BY created_at DESC');
     res.json({ success: true, data: result.rows });
@@ -115,7 +103,7 @@ app.get('/api/data', async (req, res) => {
 });
 
 // Get vaults by owner
-app.get('/api/owner', async (req, res) => {
+app.get('/owner', async (req, res) => {
   try {
     const { address } = req.query;
     if (!address) {
@@ -138,7 +126,7 @@ app.get('/api/owner', async (req, res) => {
 });
 
 // Add vault to owner
-app.post('/api/add', async (req, res) => {
+app.post('/add', async (req, res) => {
   try {
     const { owner_address, vault_address } = req.body;
     
@@ -171,12 +159,7 @@ app.post('/api/add', async (req, res) => {
 const start = async () => {
   try {
     console.log('Starting server...');
-    
-    // Skip database creation in production (use existing database)
-    if (process.env.NODE_ENV !== 'production') {
-      await createDatabase();
-    }
-    
+    await createDatabase();
     await initConnection();
     await initDB();
     
@@ -184,9 +167,9 @@ const start = async () => {
       console.log(`Server running on port ${port}`);
       console.log('Endpoints:');
       console.log('  GET /health');
-      console.log('  GET /api/data');
-      console.log('  GET /api/owner?address=ADDRESS');
-      console.log('  POST /api/add');
+      console.log('  GET /data');
+      console.log('  GET /owner?address=ADDRESS');
+      console.log('  POST /add');
     });
   } catch (err) {
     console.error('Failed to start server:', err.message);
@@ -196,4 +179,17 @@ const start = async () => {
 
 start();
 
-export default app;
+// # Check health
+// curl http://localhost:3000/health
+
+// # Get all data
+// curl http://localhost:3000/data
+
+// # Get owner's vaults
+// curl "http://localhost:3000/owner?address=0x123"
+// curl "postgresql://neondb_owner:npg_91ilpTHBYCfd@ep-muddy-band-a5yeonhi-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require/owner?address=0x123"
+
+// # Add vault
+// curl -X POST http://localhost:3000/add \
+//   -H "Content-Type: application/json" \
+//   -d '{"owner_address":"0x123","vault_address":"0xabc"}'
