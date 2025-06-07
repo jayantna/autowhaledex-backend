@@ -15,12 +15,18 @@ let pool;
 // Create database if it doesn't exist
 const createDatabase = async () => {
   const adminPool = new Pool({
-    user: process.env.PGUSER || 'postgres',
-    host: process.env.PGHOST || 'localhost',
-    database: process.env.PGDATABASE || 'postgres', // Connect to default postgres database
-    password: process.env.PGPASSWORD || 'password',
-    port: process.env.PGPORT || 5432,
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
   });
+
+  // new Pool({
+  //   user: process.env.PGUSER || 'postgres',
+  //   host: process.env.PGHOST || 'localhost',
+  //   database: process.env.PGDATABASE || 'postgres', // Connect to default postgres database
+  //   password: process.env.PGPASSWORD || 'password',
+  //   port: process.env.PGPORT || 5432,
+  // });
+
 
   try {
     // Check if vault_db exists
@@ -45,12 +51,17 @@ const createDatabase = async () => {
 // Initialize database connection
 const initConnection = async () => {
   pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'vault_db',
-    password: 'password',
-    port: 5432,
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
   });
+  
+  // new Pool({
+  //   user: 'postgres',
+  //   host: 'localhost',
+  //   database: 'vault_db',
+  //   password: 'password',
+  //   port: 5432,
+  // });
   
   // Test connection
   try {
