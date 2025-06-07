@@ -20,11 +20,9 @@
       "dest": "/public/$1"
     }
   ],
-  "env": {
-    "PGUSER": "@pguser",
-    "PGHOST": "@pghost",
-    "PGDATABASE": "@pgdatabase",
-    "PGPASSWORD": "@pgpassword",
-    "PGPORT": "@pgport"
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 10
+    }
   }
 }
