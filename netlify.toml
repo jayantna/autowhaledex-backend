@@ -1,8 +1,8 @@
 [build]
-  # No build command needed for static files
-  command = "echo 'No build step required'"
-  # Serve static files from public directory
-  publish = "public"
+  # Simple build command that creates dist directory
+  command = "npm run build"
+  # Frontend build output directory
+  publish = "dist"
   # Functions directory
   functions = "netlify/functions"
 

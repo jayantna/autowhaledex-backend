@@ -4,7 +4,7 @@
   "description": "Backend API for vault management",
   "type": "module",
   "scripts": {
-    "build": "echo 'No build step required for static site'",
+    "build": "mkdir -p dist && cp -r public/* dist/",
     "dev": "NODE_ENV=development node server.js",
     "start": "NODE_ENV=production node server.js"
   },
