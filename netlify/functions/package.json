@@ -1,13 +1,8 @@
 {
-  "name": "vault-api-backend",
+  "name": "netlify-functions",
   "version": "1.0.0",
-  "description": "Backend API for vault management",
+  "description": "Netlify functions for vault API",
   "type": "module",
-  "scripts": {
-    "build": "mkdir -p dist && cp -r public/* dist/",
-    "dev": "NODE_ENV=development node server.js",
-    "start": "NODE_ENV=production node server.js"
-  },
   "dependencies": {
     "pg": "^8.11.3"
   },
